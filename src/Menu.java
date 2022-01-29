@@ -12,7 +12,7 @@ public class Menu {
     static JButton buttonExit;
     static JButton[] buttons;
     static JFrame frame;
-    static DrawPanel canvas;
+    static JPanel menuPanel;
 
     //has to be here else error
     private JPanel panel;
@@ -22,7 +22,6 @@ public class Menu {
 
     public static void main(String[] args){
         frame = setupMenu();
-
     }
 
     private static JFrame setupMenu() {
@@ -37,8 +36,10 @@ public class Menu {
         //creating ending condition
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        //setting up panel
         JPanel panel = setupPanel(screenWidth,screenHeight);
 
+        //making visible
         frame.add(panel);
         frame.setVisible(true);
         return frame;
@@ -55,6 +56,7 @@ public class Menu {
         name.setFont(new Font("Jetbrains Mono", Font.PLAIN, screenHeight/20));
         name.setForeground(Colors.text);
 
+        //saving buttons to array for afterwards hiding
         buttons = new JButton[4];
         buttonStart = createButton("Start",screenWidth,screenHeight,0);
         buttonProg = createButton("Program doc",screenWidth,screenHeight,1);
@@ -62,16 +64,16 @@ public class Menu {
         buttonExit = createButton("Exit",screenWidth,screenHeight,3);
 
         //TODO: kouknout se na vystup SVG (scalable vector graphics)
-        //https://xmlgraphics.apache.org/batik/using/svg-generator.html
+        //https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
 
-        //https://www.youtube.com/watch?v=mDxEGtMNPtA&t=4318s
-
+        //add controls to panel
         panel.add(name);
         panel.add(buttonStart);
         panel.add(buttonProg);
         panel.add(buttonUser);
         panel.add(buttonExit);
 
+        menuPanel = panel;
         return panel;
     }
 
@@ -110,6 +112,7 @@ public class Menu {
             }
         } );
 
+        //interactable buttons
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setForeground(Colors.points);
@@ -124,15 +127,37 @@ public class Menu {
 
     private static void startDrawing() {
         hideButtons();
-        //TODO:udelat drawing
+        //TODO:udelat 2d graph
 
-        //https://stackoverflow.com/questions/9612684/drawing-in-java-using-canvas/9612991
+        /*
+        RectDraw newrect= new RectDraw();
+        newrect.setBackground(Colors.background);
+        frame.add(newrect);
         //mozna nedelat novej panel ale jenom do puvodniho dat ramecek?
+         */
     }
 
     private static void hideButtons() {
         for (JButton button : buttons){
             button.setVisible(false);
         }
+        menuPanel.setVisible(false);
     }
+
+    //in progress
+    /*
+    private static class RectDraw extends JPanel {
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            g.drawRect(230,80,10,10);
+            g.setColor(Color.RED);
+            g.fillRect(230,80,10,10);
+        }
+
+        public Dimension getPreferredSize() {
+            return new Dimension(200, 200);
+        }
+    }
+     */
 }
