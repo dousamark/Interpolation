@@ -1,8 +1,11 @@
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Menu {
     static JLabel name;
@@ -13,6 +16,8 @@ public class Menu {
     static JButton[] buttons;
     static JFrame frame;
     static JPanel menuPanel;
+
+    static RectDraw Canvas;
 
     //has to be here else error
     private JPanel panel;
@@ -29,15 +34,15 @@ public class Menu {
 
         //setting size
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-        int screenWidth = gd.getDisplayMode().getWidth();
-        int screenHeight = gd.getDisplayMode().getHeight();
-        frame.setBounds(0,0,screenWidth,screenHeight);
+        Global.ScreenWidth = gd.getDisplayMode().getWidth();
+        Global.ScreenHeight = gd.getDisplayMode().getHeight();
+        frame.setBounds(0,0, Global.ScreenWidth, Global.ScreenHeight);
 
         //creating ending condition
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //setting up panel
-        JPanel panel = setupPanel(screenWidth,screenHeight);
+        JPanel panel = setupPanel();
 
         //making visible
         frame.add(panel);
@@ -45,23 +50,20 @@ public class Menu {
         return frame;
     }
 
-    private static JPanel setupPanel(int screenWidth, int screenHeight) {
+    private static JPanel setupPanel() {
         JPanel panel = new JPanel();
-        panel.setSize(screenWidth,screenHeight);
+        panel.setSize(Global.ScreenWidth, Global.ScreenHeight);
         panel.setLayout(null);
         panel.setBackground(Colors.background);
 
-        name = new JLabel("Interpolation");
-        name.setBounds(screenWidth/4, 20,350,100);
-        name.setFont(new Font("Jetbrains Mono", Font.PLAIN, screenHeight/20));
-        name.setForeground(Colors.text);
+        name = getName();
 
         //saving buttons to array for afterwards hiding
         buttons = new JButton[4];
-        buttonStart = createButton("Start",screenWidth,screenHeight,0);
-        buttonProg = createButton("Program doc",screenWidth,screenHeight,1);
-        buttonUser = createButton("User doc",screenWidth,screenHeight,2);
-        buttonExit = createButton("Exit",screenWidth,screenHeight,3);
+        buttonStart = createButton("Start",0);
+        buttonProg = createButton("Program doc",1);
+        buttonUser = createButton("User doc",2);
+        buttonExit = createButton("Exit",3);
 
         //TODO: kouknout se na vystup SVG (scalable vector graphics)
         //https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
@@ -77,12 +79,12 @@ public class Menu {
         return panel;
     }
 
-    private static JButton createButton(String name, int screenWidth, int screenHeight, int buttonCount) {
+    private static JButton createButton(String name, int buttonCount) {
         JButton button = new JButton(name);
-        button.setBounds(screenWidth/4, screenHeight/12*(buttonCount+2),300,60);
+        button.setBounds(Global.ScreenWidth/4, Global.ScreenHeight/12*(buttonCount+2),300,60);
         button.setBorder(new RoundedBorder(60));
         button.setBackground(Colors.background);
-        button.setFont(new Font("Jetbrains Mono", Font.PLAIN, screenHeight/40));
+        button.setFont(new Font("Jetbrains Mono", Font.PLAIN, Global.ScreenHeight/40));
         button.setForeground(Colors.text);
         button.setFocusPainted(false);
 
@@ -127,14 +129,59 @@ public class Menu {
 
     private static void startDrawing() {
         hideButtons();
-        //TODO:udelat 2d graph
 
-        /*
-        RectDraw newrect= new RectDraw();
-        newrect.setBackground(Colors.background);
-        frame.add(newrect);
-        //mozna nedelat novej panel ale jenom do puvodniho dat ramecek?
-         */
+        Global.CanvasWidth = 500;
+        Global.XCoord = Global.ScreenWidth/3-(Global.CanvasWidth/2);
+        Global.YCoord = Global.ScreenHeight/4-(Global.CanvasWidth/2)+100;
+
+        name = getName();
+        Canvas= new RectDraw();
+        Canvas.setBackground(Colors.background);
+
+
+        frame.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                Point NewPoint = new Point(e.getX(),e.getY());
+                if(checkBounds(NewPoint)){
+                    Global.LastPoint = NewPoint;
+                    Global.Points.add(NewPoint);
+
+                    updateGraph(NewPoint.x, NewPoint.y);
+
+                }
+                else{
+                    JOptionPane.showMessageDialog(null, "Point is out of bounds");
+                }
+
+            }
+        });
+
+        frame.add(name);
+        frame.add(Canvas);
+    }
+
+    private static void updateGraph(int x, int y) {
+        Canvas.fillCell(x,y);
+    }
+
+
+
+    private static boolean checkBounds(Point newPoint) {
+        if(newPoint.x>=Global.XCoord && newPoint.x<=Global.XCoord+Global.CanvasWidth){
+            if(newPoint.y>=Global.YCoord && newPoint.y<=Global.YCoord+Global.CanvasWidth){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static JLabel getName() {
+        JLabel name = new JLabel("Interpolation");
+        name.setBounds(Global.ScreenWidth/4, 20,350,100);
+        name.setFont(new Font("Jetbrains Mono", Font.PLAIN, Global.ScreenHeight/20));
+        name.setForeground(Colors.text);
+        return name;
     }
 
     private static void hideButtons() {
@@ -144,20 +191,32 @@ public class Menu {
         menuPanel.setVisible(false);
     }
 
-    //in progress
-    /*
     private static class RectDraw extends JPanel {
+
+        private List<Point> fillCells;
+
+        public RectDraw() {
+            fillCells = new ArrayList<>(25);
+        }
+
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
-            g.drawRect(230,80,10,10);
+
+            for (Point fillCell : fillCells) {
+                int cellX = 10 + (fillCell.x * 10);
+                int cellY = 10 + (fillCell.y * 10);
+                g.setColor(Color.RED);
+                g.fillRect(cellX, cellY, 10, 10);
+            }
+
+            g.drawRect(Global.XCoord,  Global.YCoord, Global.CanvasWidth, Global.CanvasWidth);
             g.setColor(Color.RED);
-            g.fillRect(230,80,10,10);
         }
 
-        public Dimension getPreferredSize() {
-            return new Dimension(200, 200);
+        public void fillCell(int x, int y) {
+            fillCells.add(new Point(x, y));
+            repaint();
         }
     }
-     */
 }
