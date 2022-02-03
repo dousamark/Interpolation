@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Canvas;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -9,15 +10,10 @@ import java.util.List;
 
 public class Menu {
     static JLabel name;
-    static JButton buttonStart;
-    static JButton buttonProg;
-    static JButton buttonUser;
-    static JButton buttonExit;
     static JButton[] buttons;
     static JFrame frame;
     static JPanel menuPanel;
-
-    static RectDraw Canvas;
+    static Canvas Canvas;
 
     //has to be here else error
     private JPanel panel;
@@ -26,7 +22,14 @@ public class Menu {
     }
 
     public static void main(String[] args){
-        frame = setupMenu();
+        EventQueue.invokeLater(new Runnable(){
+            @Override
+            public void run(){
+                frame = setupMenu();
+            }
+        });
+
+
     }
 
     private static JFrame setupMenu() {
@@ -60,10 +63,10 @@ public class Menu {
 
         //saving buttons to array for afterwards hiding
         buttons = new JButton[4];
-        buttonStart = createButton("Start",0);
-        buttonProg = createButton("Program doc",1);
-        buttonUser = createButton("User doc",2);
-        buttonExit = createButton("Exit",3);
+        JButton buttonStart = createButton("Start",0);
+        JButton buttonProg = createButton("Program doc",1);
+        JButton buttonUser = createButton("User doc",2);
+        JButton buttonExit = createButton("Exit",3);
 
         //TODO: kouknout se na vystup SVG (scalable vector graphics)
         //https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
@@ -134,9 +137,7 @@ public class Menu {
         Global.XCoord = Global.ScreenWidth/3-(Global.CanvasWidth/2);
         Global.YCoord = Global.ScreenHeight/4-(Global.CanvasWidth/2)+100;
 
-        name = getName();
-        Canvas= new RectDraw();
-        Canvas.setBackground(Colors.background);
+
 
 
         frame.addMouseListener(new MouseAdapter() {
@@ -146,9 +147,7 @@ public class Menu {
                 if(checkBounds(NewPoint)){
                     Global.LastPoint = NewPoint;
                     Global.Points.add(NewPoint);
-
-                    updateGraph(NewPoint.x, NewPoint.y);
-
+                    updateGraph();
                 }
                 else{
                     JOptionPane.showMessageDialog(null, "Point is out of bounds");
@@ -157,14 +156,21 @@ public class Menu {
             }
         });
 
-        frame.add(name);
+        //name = getName();
+        //frame.add(name);
+    }
+
+    private static void updateGraph() {
+        //removing old Canvas
+        //frame.remove(Canvas);
+
+
+        Canvas= new Canvas();
+
+        Canvas.setVisible(true);
+        //adding updated one
         frame.add(Canvas);
     }
-
-    private static void updateGraph(int x, int y) {
-        Canvas.fillCell(x,y);
-    }
-
 
 
     private static boolean checkBounds(Point newPoint) {
@@ -191,32 +197,5 @@ public class Menu {
         menuPanel.setVisible(false);
     }
 
-    private static class RectDraw extends JPanel {
 
-        private List<Point> fillCells;
-
-        public RectDraw() {
-            fillCells = new ArrayList<>(25);
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-
-            for (Point fillCell : fillCells) {
-                int cellX = 10 + (fillCell.x * 10);
-                int cellY = 10 + (fillCell.y * 10);
-                g.setColor(Color.RED);
-                g.fillRect(cellX, cellY, 10, 10);
-            }
-
-            g.drawRect(Global.XCoord,  Global.YCoord, Global.CanvasWidth, Global.CanvasWidth);
-            g.setColor(Color.RED);
-        }
-
-        public void fillCell(int x, int y) {
-            fillCells.add(new Point(x, y));
-            repaint();
-        }
-    }
 }
