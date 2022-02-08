@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.Canvas;
 import java.awt.event.ActionEvent;
@@ -8,7 +9,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Menu {
+//https://stackoverflow.com/questions/30356545/java-creating-a-jframe-using-gridlayout-with-mouse-interactive-jpanels
+public class Menu implements Runnable {
     static JLabel name;
     static JButton[] buttons;
     static JFrame frame;
@@ -18,22 +20,16 @@ public class Menu {
     //has to be here else error
     private JPanel panel;
 
-    public Menu() {
+    @Override
+    public void run() {
+        initGUI();
     }
-
     public static void main(String[] args){
-        EventQueue.invokeLater(new Runnable(){
-            @Override
-            public void run(){
-                frame = setupMenu();
-            }
-        });
-
-
+        EventQueue.invokeLater(new Menu());
     }
 
-    private static JFrame setupMenu() {
-        JFrame frame = new JFrame("Menu");
+    private void initGUI() {
+        frame = new JFrame("Interpolation");
 
         //setting size
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
@@ -50,10 +46,9 @@ public class Menu {
         //making visible
         frame.add(panel);
         frame.setVisible(true);
-        return frame;
     }
 
-    private static JPanel setupPanel() {
+    private JPanel setupPanel() {
         JPanel panel = new JPanel();
         panel.setSize(Global.ScreenWidth, Global.ScreenHeight);
         panel.setLayout(null);
@@ -82,7 +77,7 @@ public class Menu {
         return panel;
     }
 
-    private static JButton createButton(String name, int buttonCount) {
+    private JButton createButton(String name, int buttonCount) {
         JButton button = new JButton(name);
         button.setBounds(Global.ScreenWidth/4, Global.ScreenHeight/12*(buttonCount+2),300,60);
         button.setBorder(new RoundedBorder(60));
@@ -117,7 +112,7 @@ public class Menu {
             }
         } );
 
-        //interactable buttons
+        //intractable buttons
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
                 button.setForeground(Colors.points);
@@ -130,46 +125,92 @@ public class Menu {
         return button;
     }
 
-    private static void startDrawing() {
+    private void startDrawing() {
         hideButtons();
 
-        Global.CanvasWidth = 500;
+        Global.CanvasWidth = 50;
         Global.XCoord = Global.ScreenWidth/3-(Global.CanvasWidth/2);
         Global.YCoord = Global.ScreenHeight/4-(Global.CanvasWidth/2)+100;
 
+        frame.remove(menuPanel);
 
+        JPanel pixels = createPixels();
 
-
-        frame.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mousePressed(MouseEvent e) {
-                Point NewPoint = new Point(e.getX(),e.getY());
-                if(checkBounds(NewPoint)){
-                    Global.LastPoint = NewPoint;
-                    Global.Points.add(NewPoint);
-                    updateGraph();
-                }
-                else{
-                    JOptionPane.showMessageDialog(null, "Point is out of bounds");
-                }
-
-            }
-        });
-
-        //name = getName();
-        //frame.add(name);
+        frame.add(pixels);
+        //frame.pack();
     }
 
-    private static void updateGraph() {
-        //removing old Canvas
-        //frame.remove(Canvas);
+    private JPanel createPixels() {
+        //int width = Global.CanvasWidth;
+        int width = 10;
+        int height = 10;
 
+        JPanel panel = new JPanel();
+        panel.setBorder(new EmptyBorder(400,40,40,40));
 
-        Canvas= new Canvas();
+        GridLayout grid = new GridLayout(width, height);
 
-        Canvas.setVisible(true);
-        //adding updated one
-        frame.add(Canvas);
+        panel.setLayout(grid);
+
+        for (int row = 0; row < height; row++) {
+            for (int column = 0; column < width; column++) {
+                PixelPanel pixelPanel = new PixelPanel();
+                pixelPanel.addMouseListener(new ColorListener(pixelPanel));
+                panel.add(pixelPanel);
+            }
+        }
+
+        return panel;
+    }
+
+    public class PixelPanel extends JPanel {
+
+        private static final int PIXEL_SIZE = 2;
+
+        private Color backgroundColor;
+
+        public PixelPanel() {
+            this.backgroundColor = Color.WHITE;
+            this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            //this.setSize(new Dimension(PIXEL_SIZE-1, PIXEL_SIZE+3));
+            this.setMaximumSize(new Dimension(1,1));
+        }
+
+        public Color getBackgroundColor() {
+            return backgroundColor;
+        }
+
+        public void setBackgroundColor(Color backgroundColor) {
+            this.backgroundColor = backgroundColor;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+
+            g.setColor(getBackgroundColor());
+            g.fillRect(0, 0, getWidth(), getHeight());
+        }
+    }
+
+    public class ColorListener extends MouseAdapter {
+
+        private PixelPanel panel;
+
+        public ColorListener(PixelPanel panel) {
+            this.panel = panel;
+        }
+
+        @Override
+        public void mousePressed(MouseEvent event) {
+            if (event.getButton() == MouseEvent.BUTTON1) {
+                panel.setBackgroundColor(Color.BLUE);
+                panel.repaint();
+            } else if (event.getButton() == MouseEvent.BUTTON3) {
+                panel.setBackgroundColor(Color.WHITE);
+                panel.repaint();
+            }
+        }
     }
 
 
@@ -196,6 +237,4 @@ public class Menu {
         }
         menuPanel.setVisible(false);
     }
-
-
 }
