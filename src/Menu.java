@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.Canvas;
 import java.awt.event.ActionEvent;
@@ -11,11 +12,10 @@ import java.util.List;
 
 //https://stackoverflow.com/questions/30356545/java-creating-a-jframe-using-gridlayout-with-mouse-interactive-jpanels
 public class Menu implements Runnable {
-    static JLabel name;
-    static JButton[] buttons;
-    static JFrame frame;
-    static JPanel menuPanel;
-    static Canvas Canvas;
+    JLabel name;
+    JButton[] buttons;
+    JFrame frame;
+    JPanel menuPanel;
 
     //has to be here else error
     private JPanel panel;
@@ -50,18 +50,17 @@ public class Menu implements Runnable {
 
     private JPanel setupPanel() {
         JPanel panel = new JPanel();
-        panel.setSize(Global.ScreenWidth, Global.ScreenHeight);
+        //panel.setSize(Global.ScreenWidth, Global.ScreenHeight);
         panel.setLayout(null);
         panel.setBackground(Colors.background);
 
         name = getName();
 
         //saving buttons to array for afterwards hiding
-        buttons = new JButton[4];
+        buttons = new JButton[3];
         JButton buttonStart = createButton("Start",0);
-        JButton buttonProg = createButton("Program doc",1);
-        JButton buttonUser = createButton("User doc",2);
-        JButton buttonExit = createButton("Exit",3);
+        JButton buttonUser = createButton("User doc",1);
+        JButton buttonExit = createButton("Exit",2);
 
         //TODO: kouknout se na vystup SVG (scalable vector graphics)
         //https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
@@ -69,7 +68,6 @@ public class Menu implements Runnable {
         //add controls to panel
         panel.add(name);
         panel.add(buttonStart);
-        panel.add(buttonProg);
         panel.add(buttonUser);
         panel.add(buttonExit);
 
@@ -93,9 +91,6 @@ public class Menu implements Runnable {
                         startDrawing();
                         break;
 
-                    case "Program doc":
-                        //TODO: udelat prirucku programatorskou a show program doc
-                        break;
 
                     case "User doc":
                         //TODO: udelat prirucku user a show user doc
@@ -128,52 +123,43 @@ public class Menu implements Runnable {
     private void startDrawing() {
         hideButtons();
 
-        Global.CanvasWidth = 50;
+        Global.CanvasWidth = 500;
         Global.XCoord = Global.ScreenWidth/3-(Global.CanvasWidth/2);
         Global.YCoord = Global.ScreenHeight/4-(Global.CanvasWidth/2)+100;
 
         frame.remove(menuPanel);
 
-        JPanel pixels = createPixels();
+        JPanel canvas = createCanvas();
 
-        frame.add(pixels);
-        //frame.pack();
+        frame.add(canvas);
     }
 
-    private JPanel createPixels() {
-        //int width = Global.CanvasWidth;
-        int width = 10;
-        int height = 10;
+    private JPanel createCanvas() {
 
         JPanel panel = new JPanel();
-        panel.setBorder(new EmptyBorder(400,40,40,40));
 
-        GridLayout grid = new GridLayout(width, height);
+        panel.setBounds(10,10,100,100);
 
-        panel.setLayout(grid);
+        CanvasPanel canvasPanel = new CanvasPanel();
 
-        for (int row = 0; row < height; row++) {
-            for (int column = 0; column < width; column++) {
-                PixelPanel pixelPanel = new PixelPanel();
-                pixelPanel.addMouseListener(new ColorListener(pixelPanel));
-                panel.add(pixelPanel);
-            }
-        }
+        canvasPanel.addMouseListener(new ColorListener(canvasPanel));
+        panel.add(canvasPanel);
 
         return panel;
     }
 
-    public class PixelPanel extends JPanel {
-
-        private static final int PIXEL_SIZE = 2;
+    public class CanvasPanel extends JPanel {
 
         private Color backgroundColor;
 
-        public PixelPanel() {
-            this.backgroundColor = Color.WHITE;
-            this.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            //this.setSize(new Dimension(PIXEL_SIZE-1, PIXEL_SIZE+3));
-            this.setMaximumSize(new Dimension(1,1));
+        public CanvasPanel() {
+            this.backgroundColor = Color.GRAY;
+            this.setBorder(new LineBorder(Color.BLACK));
+
+            JLabel jlabel = new JLabel("Testovací label");
+            jlabel.setFont(new Font("Verdana",1,20));
+            this.add(jlabel);
+
         }
 
         public Color getBackgroundColor() {
@@ -190,14 +176,16 @@ public class Menu implements Runnable {
 
             g.setColor(getBackgroundColor());
             g.fillRect(0, 0, getWidth(), getHeight());
+
+            //g.drawLine(100,0,200,100);
         }
     }
 
     public class ColorListener extends MouseAdapter {
 
-        private PixelPanel panel;
+        private CanvasPanel panel;
 
-        public ColorListener(PixelPanel panel) {
+        public ColorListener(CanvasPanel panel) {
             this.panel = panel;
         }
 
@@ -212,7 +200,6 @@ public class Menu implements Runnable {
             }
         }
     }
-
 
     private static boolean checkBounds(Point newPoint) {
         if(newPoint.x>=Global.XCoord && newPoint.x<=Global.XCoord+Global.CanvasWidth){
@@ -231,7 +218,7 @@ public class Menu implements Runnable {
         return name;
     }
 
-    private static void hideButtons() {
+    private void hideButtons() {
         for (JButton button : buttons){
             button.setVisible(false);
         }
