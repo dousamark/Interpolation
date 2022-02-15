@@ -6,13 +6,7 @@ public class Global {
     static int ScreenWidth;
     static int ScreenHeight;
 
-    static int CanvasWidth;
-    static int XCoord;
-    static int YCoord;
-
-    static Point LastPoint;
-    static List<Point> Points = new ArrayList<Point>();
-
-    static Graphics Graphics;
-
+    static Points Points;
+    static List<Point> interpolPoints = new ArrayList<>();
+    static int[] LastY;
 }
