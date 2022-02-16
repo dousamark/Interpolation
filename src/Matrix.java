@@ -16,8 +16,8 @@ public class Matrix {
         int line = 0;
         for (Point point: interpolPoints) {
             for (int row = 0; row < size; row++) {
-                //vyplnuji zezadu tedy x^3 + x^2 + x^1 + c = d
-                matrix[line][size - row-1]= (double) Math.pow(point.x,row);
+                //filled from back, example: x^3 + x^2 + x^1 + c = d
+                matrix[line][size - row-1]= Math.pow(point.x,row);
             }
             solution[line]=(long)point.y;
             line++;

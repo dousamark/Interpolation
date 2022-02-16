@@ -1,11 +1,12 @@
 import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.EditorKit;
 import java.awt.*;
+import java.io.*;
 
 public class Menu implements Runnable {
     private JPanel panel;
-    JButton[] buttons;
     JFrame frame;
-    JPanel menuPanel;
 
     @Override
     public void run() {
@@ -46,8 +47,6 @@ public class Menu implements Runnable {
         name.setFont(new Font("Jetbrains Mono", Font.PLAIN, Global.ScreenHeight / 20));
         name.setForeground(Colors.text);
 
-        //saving buttons to array for afterwards hiding
-        buttons = new JButton[3];
         JButton buttonStart = createButton("Start", 0);
         JButton buttonUser = createButton("User doc", 1);
         JButton buttonExit = createButton("Exit", 2);
@@ -58,7 +57,6 @@ public class Menu implements Runnable {
         panel.add(buttonUser);
         panel.add(buttonExit);
 
-        menuPanel = panel;
         return panel;
     }
 
@@ -73,40 +71,46 @@ public class Menu implements Runnable {
 
         button.addActionListener(e -> {
             switch (name) {
-                case "Start":
-                    startDrawing();
-                    break;
-
-                case "User doc":
-                    //TODO: make and show user doc
-                    // make programmer doc
-                    break;
-
-                case "Exit":
-                    frame.dispose();
-                    break;
-
-                default:
-                    break;
+                case "Start" -> startDrawing();
+                case "User doc" -> JOptionPane.showMessageDialog(null, getUserDoc());
+                case "Exit" -> frame.dispose();
             }
         });
 
         //intractable buttons
         button.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
-                button.setForeground(Colors.points);
+                button.setForeground(Colors.line);
             }
 
             public void mouseExited(java.awt.event.MouseEvent evt) {
                 button.setForeground(Colors.text);
             }
         });
-        buttons[buttonCount] = button;
         return button;
     }
 
+    private String getUserDoc() {
+        String doc = "";
+        try{
+            // read rtf from file
+            JEditorPane p = new JEditorPane();
+            p.setContentType("text/rtf");
+            EditorKit rtfKit = p.getEditorKitForContentType("text/rtf");
+            rtfKit.read(new FileReader("User Documentation.rtf"), p.getDocument(), 0);
+
+            // convert to text
+            EditorKit txtKit = p.getEditorKitForContentType("text/plain");
+            Writer writer = new StringWriter();
+            txtKit.write(writer, p.getDocument(), 0, p.getDocument().getLength());
+            doc = writer.toString();
+        } catch (BadLocationException | IOException e){
+            e.printStackTrace();
+        }
+        return doc;
+    }
+
     private void startDrawing() {
-        hideButtons();
         frame.setVisible(false);
 
         Global.Points = new Points();
@@ -142,12 +146,5 @@ public class Menu implements Runnable {
 
         canvasPanel.add(exportSVG);
         return canvasPanel;
-    }
-
-    private void hideButtons() {
-        for (JButton button : buttons) {
-            button.setVisible(false);
-        }
-        menuPanel.setVisible(false);
     }
 }

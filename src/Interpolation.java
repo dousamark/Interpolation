@@ -1,8 +1,6 @@
-import java.util.List;
-
 public class Interpolation {
 
-    public static int[] interpolate(List<Point> interpolPoints) {
+    public static int[] interpolate() {
         int[] funcPoints = new int[Global.ScreenWidth];
 
         Matrix matrix = new Matrix(Global.interpolPoints.size());

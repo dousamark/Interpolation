@@ -4,19 +4,8 @@ import java.awt.*;
 
 public class CanvasPanel extends JPanel {
 
-    private Color backgroundColor;
-
     public CanvasPanel() {
-        this.backgroundColor = Colors.background;
-        this.setBorder(new LineBorder(Color.BLACK));
-    }
-
-    public Color getBackgroundColor() {
-        return backgroundColor;
-    }
-
-    public void setBackgroundColor(Color backgroundColor) {
-        this.backgroundColor = backgroundColor;
+        this.setBorder(new LineBorder(Colors.text));
     }
 
     @Override
@@ -24,10 +13,12 @@ public class CanvasPanel extends JPanel {
         super.paintComponent(g);
 
         //default setup
-        g.setColor(getBackgroundColor());
+        g.setColor(Colors.text);
         g.drawLine(100,100,100,600);
         g.drawLine(100,600,1200,600);
 
+
+        g.setColor(Colors.points);
         //points
         for (int i = 0; i < Global.ScreenWidth; i++) {
             for (int j = 0; j < Global.ScreenHeight; j++) {
@@ -38,8 +29,9 @@ public class CanvasPanel extends JPanel {
             }
         }
 
+        g.setColor(Colors.line);
         //interpolation
-        Global.LastY = Interpolation.interpolate(Global.interpolPoints);
+        Global.LastY = Interpolation.interpolate();
 
         //each 5 for practical use
         for (int x = 0; x < Global.ScreenWidth-5; x=x+5) {

@@ -1,4 +1,3 @@
-
 public class Points {
     public Point[][] field = new Point[Global.ScreenWidth][Global.ScreenHeight];
 
