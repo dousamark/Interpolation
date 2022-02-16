@@ -1,5 +1,4 @@
 public class Interpolation {
-
     public static int[] interpolate() {
         int[] funcPoints = new int[Global.ScreenWidth];
 

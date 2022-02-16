@@ -87,6 +87,7 @@ public class Menu implements Runnable {
                 button.setForeground(Colors.text);
             }
         });
+
         return button;
     }
 
@@ -124,7 +125,7 @@ public class Menu implements Runnable {
 
     private CanvasPanel createCanvas() {
         CanvasPanel canvasPanel = new CanvasPanel();
-        canvasPanel.addMouseListener(new ColorListener(canvasPanel));
+        canvasPanel.addMouseListener(new ClickListener(canvasPanel));
 
         JLabel text = new JLabel("Export SVG");
         text.setFont(new Font("Jetbrains Mono", Font.PLAIN, 20));
