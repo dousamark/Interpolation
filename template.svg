@@ -1,5 +1,7 @@
-<svg viewBox="0 0 1920 1080">
+<parent xmlns:svg="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1000 650">
 
   <polyline points="#"
             fill="none" stroke="black" />
 </svg>
+</parent>

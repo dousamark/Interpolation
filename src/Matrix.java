@@ -4,7 +4,7 @@ public class Matrix {
     double[][] matrix;
     double[] solution;
     int size;
-    private static final double EPSILON = 1e-10;
+    double norm = 1e-10;
     
     public Matrix(int size){
         this.size = size;
@@ -25,40 +25,42 @@ public class Matrix {
     }
 
     public double[] solve() {
-        int n = solution.length;
-
-        for (int p = 0; p < n; p++) {
-
+        for (int pivot = 0; pivot < size; pivot++) {
             // find pivot row and swap
-            int max = p;
-            for (int i = p + 1; i < n; i++) {
-                if (Math.abs(matrix[i][p]) > Math.abs(matrix[max][p])) {
+            int max = pivot;
+            for (int i = pivot + 1; i < size; i++) {
+                if (Math.abs(matrix[i][pivot]) > Math.abs(matrix[max][pivot])) {
                     max = i;
                 }
             }
-            double[] temp = matrix[p]; matrix[p] = matrix[max]; matrix[max] = temp;
-            double   t    = solution[p]; solution[p] = solution[max]; solution[max] = t;
 
-            // singular or nearly singular
-            if (Math.abs(matrix[p][p]) <= EPSILON) {
-                throw new ArithmeticException("Matrix is singular or nearly singular");
-            }
+            //swaping values depending on found pivot
+            double[] temp = matrix[pivot];
+            matrix[pivot] = matrix[max];
+            matrix[max] = temp;
 
-            // pivot within A and b
-            for (int i = p + 1; i < n; i++) {
-                double alpha = matrix[i][p] / matrix[p][p];
-                solution[i] -= alpha * solution[p];
-                for (int j = p; j < n; j++) {
-                    matrix[i][j] -= alpha * matrix[p][j];
+            double temp2 = solution[pivot];
+            solution[pivot] = solution[max];
+            solution[max] = temp2;
+
+            // if matrix doesnt have nice result
+            if (Math.abs(matrix[pivot][pivot]) <= norm) { return null; }
+
+            // substracting pivotal row from rest
+            for (int i = pivot + 1; i < size; i++) {
+                double alpha = matrix[i][pivot] / matrix[pivot][pivot];
+                solution[i] -= alpha * solution[pivot];
+                for (int j = pivot; j < size; j++) {
+                    matrix[i][j] -= alpha * matrix[pivot][j];
                 }
             }
         }
 
         // back substitution
-        double[] x = new double[n];
-        for (int i = n - 1; i >= 0; i--) {
+        double[] x = new double[size];
+        for (int i = size - 1; i >= 0; i--) {
             double sum = 0.0;
-            for (int j = i + 1; j < n; j++) {
+            for (int j = i + 1; j < size; j++) {
                 sum += matrix[i][j] * x[j];
             }
             x[i] = (solution[i] - sum) / matrix[i][i];

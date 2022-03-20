@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.EditorKit;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.*;
 
 public class Menu implements Runnable {
@@ -22,9 +24,9 @@ public class Menu implements Runnable {
 
         //setting size
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-        Global.ScreenWidth = gd.getDisplayMode().getWidth();
-        Global.ScreenHeight = gd.getDisplayMode().getHeight();
-        frame.setBounds(0, 0, Global.ScreenWidth, Global.ScreenHeight);
+        Helper.ScreenWidth = gd.getDisplayMode().getWidth();
+        Helper.ScreenHeight = gd.getDisplayMode().getHeight();
+        frame.setBounds(0, 0, Helper.ScreenWidth, Helper.ScreenHeight);
 
         //creating ending condition
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -43,9 +45,10 @@ public class Menu implements Runnable {
         panel.setBackground(Colors.background);
 
         JLabel name = new JLabel("Interpolation");
-        name.setBounds(Global.ScreenWidth / 4, 20, 350, 100);
-        name.setFont(new Font("Jetbrains Mono", Font.PLAIN, Global.ScreenHeight / 20));
+        name.setBounds(Helper.ScreenWidth / 4, 20, 350, 100);
+        name.setFont(new Font("Jetbrains Mono", Font.PLAIN, Helper.ScreenHeight / 20));
         name.setForeground(Colors.text);
+
 
         JButton buttonStart = createButton("Start", 0);
         JButton buttonUser = createButton("User doc", 1);
@@ -62,10 +65,10 @@ public class Menu implements Runnable {
 
     private JButton createButton(String name, int buttonCount) {
         JButton button = new JButton(name);
-        button.setBounds(Global.ScreenWidth / 4, Global.ScreenHeight / 12 * (buttonCount + 2), 300, 60);
+        button.setBounds(Helper.ScreenWidth / 4, Helper.ScreenHeight / 12 * (buttonCount + 2), 300, 60);
         button.setBorder(new RoundedBorder(60));
         button.setBackground(Colors.background);
-        button.setFont(new Font("Jetbrains Mono", Font.PLAIN, Global.ScreenHeight / 40));
+        button.setFont(new Font("Jetbrains Mono", Font.PLAIN, Helper.ScreenHeight / 40));
         button.setForeground(Colors.text);
         button.setFocusPainted(false);
 
@@ -112,15 +115,133 @@ public class Menu implements Runnable {
     }
 
     private void startDrawing() {
-        frame.setVisible(false);
+        frame.dispose();
 
-        Global.Points = new Points();
+        //setup JFrame
+        Helper.Points = new Points();
         JFrame drawFrame = new JFrame();
-
-        drawFrame.add(createCanvas());
-        drawFrame.setBounds(0, 0, Global.ScreenWidth, Global.ScreenHeight);
+        drawFrame.setLayout(new BorderLayout());
         drawFrame.setVisible(true);
+        drawFrame.setBounds(0, 0, Helper.ScreenWidth, Helper.ScreenHeight);
+
+        //setting drawing panel
+        drawFrame.add(createCanvas(),BorderLayout.CENTER);
+
+        drawFrame.add(createUsabilityMenu(),BorderLayout.WEST);
+
         frame = drawFrame;
+    }
+
+    private JButton createEndProgramButton() {
+        JButton endButton = new JButton();
+        JLabel label = getLabel("End Program");
+
+        endButton.add(label);
+        endButton.setPreferredSize(new Dimension(250,120));
+        endButton.addActionListener(e -> frame.dispose());
+        return endButton;
+    }
+
+    private JPanel createUsabilityMenu() {
+        JPanel UIMenu = new JPanel();
+        UIMenu.setLayout(new BorderLayout());
+
+        ///list
+        DefaultListModel<Point> buttonList = new DefaultListModel<>();
+        Helper.UIlist = buttonList;
+
+        JList<Point> list = new JList<>(buttonList);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setPreferredSize(new Dimension(250,500));
+
+        JScrollPane listScroller = new JScrollPane(list);
+        listScroller.setPreferredSize(new Dimension(250,200));
+        listScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        UIMenu.add(listScroller,BorderLayout.NORTH);
+
+        //manual adding points
+        JPanel innerManualHolder = new JPanel();
+        innerManualHolder.setLayout(new GridLayout(8,1));
+
+        JLabel blankLabel = getLabel("");
+        JLabel manualLabel = getLabel("Manually add points");
+        JLabel manualLabel2 = getLabel("x: [0-1000] y: [0-650]");
+
+        JTextField xInput = new JTextField("X coords");
+        xInput.addFocusListener(new FocusListener() {
+            public void focusGained(FocusEvent e) {xInput.setText("");}
+            public void focusLost(FocusEvent e) {}
+        });
+        Helper.xInput = xInput;
+
+        JTextField yInput = new JTextField("Y Coords");
+        yInput.addFocusListener(new FocusListener() {
+            public void focusGained(FocusEvent e) {yInput.setText("");}
+            public void focusLost(FocusEvent e) {}
+        });
+        Helper.yInput = yInput;
+
+        JButton addManualButton = new JButton();
+        JLabel addManualButtonText = getLabel("Add point");
+        addManualButton.add(addManualButtonText);
+        addManualButton.addActionListener(e -> {
+            String xVal = xInput.getText();
+            String yVal = yInput.getText();
+            if(Helper.validateInputCoords(xVal,yVal)){
+                //because of inverted Y axis
+                Helper.addPoint(Integer.valueOf(xVal),Helper.ySize-Integer.valueOf(yVal));
+            }else{
+                JOptionPane.showMessageDialog(null, "Input valid coordinates.");
+            }
+        });
+
+
+        innerManualHolder.add(blankLabel);
+        innerManualHolder.add(manualLabel);
+        innerManualHolder.add(manualLabel2);
+        innerManualHolder.add(xInput);
+        innerManualHolder.add(yInput);
+        innerManualHolder.add(addManualButton);
+
+        UIMenu.add(innerManualHolder,BorderLayout.CENTER);
+
+
+        //deletion button from list
+        JLabel pointDelButtonText = getLabel("Delete point");
+
+        JButton pointDelButton = new JButton();
+        pointDelButton.add(pointDelButtonText);
+        pointDelButton.setPreferredSize(new Dimension(50,80));
+
+        pointDelButton.addActionListener(e -> {
+            int index = list.getSelectedIndex();
+            removePoint(list.getSelectedValue());
+            buttonList.remove(index);
+        });
+
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BorderLayout());
+        buttonPanel.setPreferredSize(new Dimension(250,200));
+
+        buttonPanel.add(pointDelButton,BorderLayout.NORTH);
+
+        buttonPanel.add(createEndProgramButton(),BorderLayout.CENTER);
+
+        UIMenu.add(buttonPanel,BorderLayout.SOUTH);
+
+        return  UIMenu;
+    }
+    private JLabel getLabel(String text){
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("Jetbrains Mono", Font.PLAIN, 20));
+        label.setForeground(Colors.text);
+        return label;
+    }
+    private void removePoint(Point selectedPoint) {
+        Helper.interpolPoints.remove(selectedPoint);
+        selectedPoint.set=false;
+        Helper.drawingPanel.repaint();
     }
 
     private CanvasPanel createCanvas() {
@@ -140,9 +261,17 @@ public class Menu implements Runnable {
 
         //adding functionality to button
         exportSVG.addActionListener(e -> {
-            Export.export(Global.LastY);
-            JOptionPane.showMessageDialog(null, "Export has been saved. Thanks for using.");
-            frame.dispose();
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Specify a file to save");
+
+            int userSelection = fileChooser.showSaveDialog(frame);
+
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                File fileToSave = fileChooser.getSelectedFile();
+                Export.export(Helper.LastY,fileToSave.getAbsolutePath());
+            }
+
+            JOptionPane.showMessageDialog(null, "Export has been saved.");
         });
 
         canvasPanel.add(exportSVG);

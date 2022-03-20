@@ -12,17 +12,21 @@ public class CanvasPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        //default setup
-        g.setColor(Colors.text);
-        g.drawLine(100,100,100,600);
-        g.drawLine(100,600,1200,600);
+        //interpolation
+        int[] funcValues = Interpolation.interpolate();
+        if( funcValues== null){
+            JOptionPane.showMessageDialog(null, "Input valid coordinates.");
+            return;
+        }
+
+        Helper.LastY = funcValues;
 
 
         g.setColor(Colors.points);
         //points
-        for (int i = 0; i < Global.ScreenWidth; i++) {
-            for (int j = 0; j < Global.ScreenHeight; j++) {
-                if(Global.Points.field[i][j].set){
+        for (int i = 0; i < Helper.ScreenWidth; i++) {
+            for (int j = 0; j < Helper.ScreenHeight; j++) {
+                if(Helper.Points.field[i][j].set){
                     g.drawLine(i-5,j,i+5,j);
                     g.drawLine(i,j-5,i,j+5);
                 }
@@ -30,12 +34,11 @@ public class CanvasPanel extends JPanel {
         }
 
         g.setColor(Colors.line);
-        //interpolation
-        Global.LastY = Interpolation.interpolate();
+
 
         //each 5 for practical use
-        for (int x = 0; x < Global.ScreenWidth-5; x=x+5) {
-            g.drawLine(x,Global.LastY [x],x+5,Global.LastY [x+5]);
+        for (int x = 0; x < Helper.ScreenWidth-5; x=x+5) {
+            g.drawLine(x,Helper.LastY [x],x+5,Helper.LastY [x+5]);
         }
     }
 }

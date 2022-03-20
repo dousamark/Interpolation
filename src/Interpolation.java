@@ -1,11 +1,14 @@
 public class Interpolation {
     public static int[] interpolate() {
-        int[] funcPoints = new int[Global.ScreenWidth];
+        int[] funcPoints = new int[Helper.ScreenWidth];
 
-        Matrix matrix = new Matrix(Global.interpolPoints.size());
-        matrix.fillMatrix(Global.interpolPoints);
+        Matrix matrix = new Matrix(Helper.interpolPoints.size());
+        matrix.fillMatrix(Helper.interpolPoints);
         double[] result = matrix.solve();
 
+        if(result== null){
+            return null;
+        }
         for (int i = 0; i < funcPoints.length; i++) {
             int sum =0;
             for (int j = 0; j < result.length; j++) {
