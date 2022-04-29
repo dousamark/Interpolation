@@ -1,9 +1,19 @@
-public class Interpolation {
-    public static int[] interpolate() {
-        int[] funcPoints = new int[Helper.ScreenWidth];
+import java.util.List;
 
-        Matrix matrix = new Matrix(Helper.interpolPoints.size());
-        matrix.fillMatrix(Helper.interpolPoints);
+public class Interpolation {
+    int screenWidth;
+    int screenHeight;
+    DataContainer dataContainer;
+    public Interpolation(int screenWidth, int screenHeight, DataContainer dataContainer){
+        this.screenHeight = screenHeight;
+        this.screenWidth = screenWidth;
+        this.dataContainer = dataContainer;
+    }
+    public int[] interpolate() {
+        int[] funcPoints = new int[screenWidth];
+
+        Matrix matrix = new Matrix(dataContainer.interpolPoints.size());
+        matrix.fillMatrix(dataContainer.interpolPoints);
         double[] result = matrix.solve();
 
         if(result== null){
@@ -18,5 +28,21 @@ public class Interpolation {
         }
 
         return funcPoints;
+    }
+
+    public boolean canInterpolate(int x, int y) {
+        Matrix matrix = new Matrix(dataContainer.interpolPoints.size()+1);
+
+        Point testingPoint = new Point(x,y);
+        dataContainer.interpolPoints.add(testingPoint);
+        matrix.fillMatrix(dataContainer.interpolPoints);
+        double[] result = matrix.solve();
+        dataContainer.interpolPoints.remove(testingPoint);
+
+        if(result== null){
+            return false;
+        }
+
+        return true;
     }
 }

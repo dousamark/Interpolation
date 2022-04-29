@@ -18,7 +18,8 @@ public class Point {
 
     @Override
     public String toString(){
-        return "Point at [" + x+","+y+"]";
+        //inverted Y axis
+        return "Point at [" + x+","+(650-y)+"]";
     }
 }
 

@@ -8,6 +8,11 @@ import java.io.*;
 
 public class Menu implements Runnable {
     private JPanel panel;
+    private DataContainer dataContainer;
+    private int screenWidth;
+    private int screenHeight;
+
+
     JFrame frame;
 
     @Override
@@ -24,15 +29,18 @@ public class Menu implements Runnable {
 
         //setting size
         GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-        Helper.ScreenWidth = gd.getDisplayMode().getWidth();
-        Helper.ScreenHeight = gd.getDisplayMode().getHeight();
-        frame.setBounds(0, 0, Helper.ScreenWidth, Helper.ScreenHeight);
+        screenWidth = gd.getDisplayMode().getWidth();
+        screenHeight = gd.getDisplayMode().getHeight();
+        frame.setBounds(0, 0, screenWidth, screenHeight);
 
         //creating ending condition
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //setting up panel
         JPanel panel = setupPanel();
+
+        //setting up DataContainer
+        dataContainer = new DataContainer();
 
         //making visible
         frame.add(panel);
@@ -45,8 +53,8 @@ public class Menu implements Runnable {
         panel.setBackground(Colors.background);
 
         JLabel name = new JLabel("Interpolation");
-        name.setBounds(Helper.ScreenWidth / 4, 20, 350, 100);
-        name.setFont(new Font("Jetbrains Mono", Font.PLAIN, Helper.ScreenHeight / 20));
+        name.setBounds(screenWidth / 4, 20, 350, 100);
+        name.setFont(new Font("Jetbrains Mono", Font.PLAIN, screenHeight / 20));
         name.setForeground(Colors.text);
 
 
@@ -65,10 +73,10 @@ public class Menu implements Runnable {
 
     private JButton createButton(String name, int buttonCount) {
         JButton button = new JButton(name);
-        button.setBounds(Helper.ScreenWidth / 4, Helper.ScreenHeight / 12 * (buttonCount + 2), 300, 60);
+        button.setBounds(screenWidth / 4, screenHeight / 12 * (buttonCount + 2), 300, 60);
         button.setBorder(new RoundedBorder(60));
         button.setBackground(Colors.background);
-        button.setFont(new Font("Jetbrains Mono", Font.PLAIN, Helper.ScreenHeight / 40));
+        button.setFont(new Font("Jetbrains Mono", Font.PLAIN, screenHeight / 40));
         button.setForeground(Colors.text);
         button.setFocusPainted(false);
 
@@ -118,18 +126,21 @@ public class Menu implements Runnable {
         frame.dispose();
 
         //setup JFrame
-        Helper.Points = new Points();
+        dataContainer.Points = new Points(screenWidth, screenHeight);
         JFrame drawFrame = new JFrame();
         drawFrame.setLayout(new BorderLayout());
         drawFrame.setVisible(true);
-        drawFrame.setBounds(0, 0, Helper.ScreenWidth, Helper.ScreenHeight);
+        drawFrame.setBounds(0, 0, screenWidth, screenHeight);
 
         //setting drawing panel
-        drawFrame.add(createCanvas(),BorderLayout.CENTER);
+        Interpolation interpolator = new Interpolation(screenWidth, screenHeight,dataContainer);
+        JPanel drawingPanel = createCanvas(interpolator);
+        drawFrame.add(drawingPanel,BorderLayout.CENTER);
 
-        drawFrame.add(createUsabilityMenu(),BorderLayout.WEST);
+        drawFrame.add(createUsabilityMenu(drawingPanel, interpolator),BorderLayout.WEST);
 
         frame = drawFrame;
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
     private JButton createEndProgramButton() {
@@ -142,13 +153,13 @@ public class Menu implements Runnable {
         return endButton;
     }
 
-    private JPanel createUsabilityMenu() {
+    private JPanel createUsabilityMenu(JPanel drawingPanel, Interpolation interpolator) {
         JPanel UIMenu = new JPanel();
         UIMenu.setLayout(new BorderLayout());
 
         ///list
         DefaultListModel<Point> buttonList = new DefaultListModel<>();
-        Helper.UIlist = buttonList;
+        dataContainer.UIlist = buttonList;
 
         JList<Point> list = new JList<>(buttonList);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -171,16 +182,24 @@ public class Menu implements Runnable {
         JTextField xInput = new JTextField("X coords");
         xInput.addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {xInput.setText("");}
-            public void focusLost(FocusEvent e) {}
+            public void focusLost(FocusEvent e) {
+                if(xInput.getText().equals("")){
+                    xInput.setText("X coords");
+                }
+            }
         });
-        Helper.xInput = xInput;
+        dataContainer.xInput = xInput;
 
         JTextField yInput = new JTextField("Y Coords");
         yInput.addFocusListener(new FocusListener() {
             public void focusGained(FocusEvent e) {yInput.setText("");}
-            public void focusLost(FocusEvent e) {}
+            public void focusLost(FocusEvent e) {
+                if(yInput.getText().equals("")){
+                    yInput.setText("Y coords");
+                }
+            }
         });
-        Helper.yInput = yInput;
+        dataContainer.yInput = yInput;
 
         JButton addManualButton = new JButton();
         JLabel addManualButtonText = getLabel("Add point");
@@ -188,12 +207,13 @@ public class Menu implements Runnable {
         addManualButton.addActionListener(e -> {
             String xVal = xInput.getText();
             String yVal = yInput.getText();
-            if(Helper.validateInputCoords(xVal,yVal)){
+            if(Helper.validateInputCoords(xVal,yVal,dataContainer)){
                 //because of inverted Y axis
-                Helper.addPoint(Integer.valueOf(xVal),Helper.ySize-Integer.valueOf(yVal));
-            }else{
-                JOptionPane.showMessageDialog(null, "Input valid coordinates.");
+                Helper.addPoint(Integer.valueOf(xVal),dataContainer.ySize-Integer.valueOf(yVal), drawingPanel, dataContainer,interpolator );
             }
+            else{
+                JOptionPane.showMessageDialog(null, "Input valid coordinates.");
+           }
         });
 
 
@@ -215,9 +235,15 @@ public class Menu implements Runnable {
         pointDelButton.setPreferredSize(new Dimension(50,80));
 
         pointDelButton.addActionListener(e -> {
-            int index = list.getSelectedIndex();
-            removePoint(list.getSelectedValue());
-            buttonList.remove(index);
+            try{
+                int index = list.getSelectedIndex();
+                removePoint(list.getSelectedValue(),drawingPanel);
+                buttonList.remove(index);
+            }
+            catch (NullPointerException ex){
+                JOptionPane.showMessageDialog(null,"No point to be deleted.");
+            }
+
         });
 
         JPanel buttonPanel = new JPanel();
@@ -238,15 +264,15 @@ public class Menu implements Runnable {
         label.setForeground(Colors.text);
         return label;
     }
-    private void removePoint(Point selectedPoint) {
-        Helper.interpolPoints.remove(selectedPoint);
+    private void removePoint(Point selectedPoint, JPanel drawingPanel) {
+        dataContainer.interpolPoints.remove(selectedPoint);
         selectedPoint.set=false;
-        Helper.drawingPanel.repaint();
+        drawingPanel.repaint();
     }
 
-    private CanvasPanel createCanvas() {
-        CanvasPanel canvasPanel = new CanvasPanel();
-        canvasPanel.addMouseListener(new ClickListener(canvasPanel));
+    private CanvasPanel createCanvas(Interpolation interpolator) {
+        CanvasPanel canvasPanel = new CanvasPanel(screenWidth,screenHeight, dataContainer);
+        canvasPanel.addMouseListener(new ClickListener(canvasPanel, dataContainer, interpolator));
 
         JLabel text = new JLabel("Export SVG");
         text.setFont(new Font("Jetbrains Mono", Font.PLAIN, 20));
@@ -266,12 +292,15 @@ public class Menu implements Runnable {
 
             int userSelection = fileChooser.showSaveDialog(frame);
 
-            if (userSelection == JFileChooser.APPROVE_OPTION) {
+            if (userSelection == 0) {
                 File fileToSave = fileChooser.getSelectedFile();
-                Export.export(Helper.LastY,fileToSave.getAbsolutePath());
+                Export exp = new Export(screenWidth, screenHeight);
+                exp.export(dataContainer.LastY,fileToSave.getAbsolutePath());
+                JOptionPane.showMessageDialog(null, "Export has been saved.");
+            }else{
+                JOptionPane.showMessageDialog(null, "Not selected correctly.");
             }
 
-            JOptionPane.showMessageDialog(null, "Export has been saved.");
         });
 
         canvasPanel.add(exportSVG);

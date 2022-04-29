@@ -4,7 +4,7 @@ public class Matrix {
     double[][] matrix;
     double[] solution;
     int size;
-    double norm = 1e-10;
+    double norm = 1e-6;
     
     public Matrix(int size){
         this.size = size;
